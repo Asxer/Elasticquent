@@ -241,7 +241,8 @@ trait ElasticquentTrait
      * @param   int $offset
      * @return  ResultCollection
      */
-    public static function searchByQuery($query = null, $aggregations = null, $sourceFields = null, $limit = null, $offset = null, $sort = null)
+    public static function searchByQuery($query = null, $aggregations = null, $sourceFields = null,
+                                         $limit = null, $offset = null, $sort = null, $min_score = null)
     {
         $instance = new static;
 
@@ -261,6 +262,10 @@ trait ElasticquentTrait
         
         if ($sort) {
             $params['body']['sort'] = $sort;
+        }
+
+        if ($min_score) {
+            $params['body']['min_score'] = $min_score;
         }
 
         $result = $instance->getElasticSearchClient()->search($params);
@@ -287,6 +292,36 @@ trait ElasticquentTrait
         $result = $instance->getElasticSearchClient()->search($params);
 
         return new ResultCollection($result, $instance = new static);
+    }
+
+    public static function countQuery($query = null, $aggregations = null, $sourceFields = null,
+                                      $limit = null, $offset = null, $sort = null, $min_score = null)
+    {
+        $instance = new static;
+
+        $params = $instance->getBasicEsParams(true, false, false, $limit, $offset);
+
+        if ($sourceFields) {
+            $params['body']['_source']['include'] = $sourceFields;
+        }
+
+        if ($query) {
+            $params['body']['query'] = $query;
+        }
+
+        if ($aggregations) {
+            $params['body']['aggs'] = $aggregations;
+        }
+
+        if ($sort) {
+            $params['body']['sort'] = $sort;
+        }
+
+        if ($min_score) {
+            $params['body']['min_score'] = $min_score;
+        }
+
+        return $instance->getElasticSearchClient()->count($params)['count'];
     }
 
     /**
